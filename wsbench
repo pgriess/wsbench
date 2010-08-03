@@ -1,0 +1,65 @@
+#!/bin/env node
+
+var OptionParser = require('./lib/optparse').OptionParser;
+var sys = require('sys');
+var url = require('url');
+var WebSocket = require('./lib/websocket').WebSocket;
+var writeError = process.binding('stdio').writeError;
+
+var OPTIONS = {
+    connections : 100,
+};
+
+var op = new OptionParser([
+    ['-c', '--num-conns NUMBER', 'number of connections to open (default: 100)'],
+    ['-h', '--help', 'display this help'],
+    ['-p', '--protocol PROTO',
+        'set the Web Socket protocol to use (default: empty)'
+    ]
+]);
+
+op.on('num-conns', function(o, v) {
+    OPTIONS.connections = v;
+});
+op.on('help', function() {
+    console.log(op.toString());
+    process.exit(0);
+});
+op.on('protocol', function(o, v) {
+    OPTIONS.protocol = v;
+});
+op.on(2, function(v) {
+    OPTIONS.url = v;
+});
+
+op.banner = 'usage: wsbench [options] <url>\n' +
+'\n' +
+'Kick off a benchmarking run against the given ws:// URL.';
+
+op.parse(process.argv);
+
+if (!OPTIONS.url) {
+    writeError('wsbench: missing required <url> parameter\n');
+    console.log('');
+    console.log(op.toString());
+    process.exit(1);
+}
+
+var cnt = 0;
+var createWS = function(src) {
+    var ws = new WebSocket(src, OPTIONS.protocol);
+
+    ws.onopen = function() {
+        ws.close();
+    };
+
+    ws.onclose = function() {
+        if (++cnt < OPTIONS.connections) {
+            createWS(src);
+        }
+    };
+}
+
+createWS(OPTIONS.url);
+
+// vim: filetype=javascript
