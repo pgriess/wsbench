@@ -55,7 +55,9 @@ op.banner = 'usage: wsbench [options] <url>\n' +
 'connection is closed before the next is initiated; or in parallel, wherein\n' +
 'a desired rate is specified and connections initiated to meet this rate,\n' +
 'independent of the state of other connections. Serial execution is the\n' +
-'default, and parallel execution can be specified using the -r <rate> option.';
+'default, and parallel execution can be specified using the -r <rate>\n' +
+'option. Parallel execution is bounded by the total number of connections\n' +
+'to be made, specified by the -c option.'
 
 op.parse(process.argv);
 
@@ -88,7 +90,12 @@ if (!OPTIONS.rate) {
     // We have a rate; parallel
     for (i = 0; i < OPTIONS.rate; i++) {
         setTimeout(function() {
-            setInterval(function() {
+            var iid = setInterval(function() {
+                if (OPTIONS.connections-- <= 0) {
+                    clearInterval(iid);
+                    return;
+                }
+
                 var ws = new WebSocket(OPTIONS.url, OPTIONS.protocol);
 
                 ws.onopen = function() {

@@ -24,7 +24,9 @@ The complete usage is
     connection is closed before the next is initiated; or in parallel, wherein
     a desired rate is specified and connections initiated to meet this rate,
     independent of the state of other connections. Serial execution is the
-    default, and parallel execution can be specified using the -r <rate> option.
+    default, and parallel execution can be specified using the -r <rate>
+    option. Parallel execution is bounded by the total number of connections
+    to be made, specified by the -c option.
     
     Available options:
       -c, --num-conns NUMBER   number of connections to open (default: 100)
