@@ -88,7 +88,7 @@ if (!OPTIONS.rate) {
         setTimeout(function() {
             var iid = setInterval(function() {
                 if (OPTIONS.connections > 0 &&
-                    ++cnt >= OPTIONS.connections) {
+                    ++cnt > OPTIONS.connections) {
                     clearInterval(iid);
                     return;
                 }
