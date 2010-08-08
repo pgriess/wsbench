@@ -1,7 +1,9 @@
-`wsbench` is a benchmarking tool for Web Socket servers. It requires a working
-installation of [NodeJS](http://nodejs.org).
+`wsbench` is a scriptable benchmarking tool for Web Socket servers.
 
-## Usage
+An installation of [NodeJS](http://nodejs.org) is required, but there are no
+other external dependencies.
+
+## Basic usage
 
 At its simplest, `wsbench` can be invoked with a Web Socket URL pointing to the
 server. For example, this opens and closes 100 connections in serial to the
@@ -20,16 +22,18 @@ indicating no limit.
 We can also send messages over each connection using the `-m NNN` option to
 indicate how many messages to send. The `-s NNN` option can be used to set the
 size of each message in bytes. When operating in this mode, the websocket
-connection is guarnateed to remain open until all messages have been
+connection is guaranteed to remain open until all messages have been
 transmitted.
 
-`wsbench` also supports execution of arbitrary JavaScript code to drive the
-interaction over the open socket (e.g. to send and receive messages) using
-the `-S FILE` option. This allows testing of rich, application-specific
-behavior.  As a trivial example, the following file will send a `Hello`
-message for the first 10 connections and `world!` for each connection after
-and then close the connection. Note that the session function is invoked once
-for each web socket opened, so we keep our counter in the module scope.
+## Session scripting
+
+The `wsbench` tool supports execution of arbitrary JavaScript code to drive the
+interaction over open connections (e.g. to send and receive messages) using the
+`-S FILE` option. This allows testing of rich, application-specific behavior.
+As a trivial example, the following file will send a `Hello` message for the
+first 10 connections and `world!` for each connection after and then close the
+connection. Note that the session function is invoked once for each web socket
+opened, so we keep our counter in the module scope.
 
     var cnt = 0;
     
@@ -42,6 +46,13 @@ for each web socket opened, so we keep our counter in the module scope.
 
 A more involved example is available in the `examples/echo/`
 [directory](http://github.com/pgriess/wsbench/tree/master/examples/echo/).
+
+Finally, the session logic can use any NodeJS module installed in the
+system. Significantly, this provides access to the built-in HTTP stack;
+constructing heterogeneous workloads consisting of a mix of Web Socket and
+HTTP requests is trivial.
+
+## Full usage
 
 The complete usage is
 
