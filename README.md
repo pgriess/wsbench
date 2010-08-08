@@ -5,7 +5,8 @@ installation of [NodeJS](http://nodejs.org).
 
 At its simplest, `wsbench` can be invoked with a Web Socket URL pointing to the
 server. For example, this opens and closes 100 connections in serial to the
-server running on localhost, port 8080.
+server running on localhost, port 8080. No messages are sent down the
+connections.
 
     % wsbench ws://localhost:8080
 
@@ -14,11 +15,17 @@ the following opens and closes 10 connections per second and runs indefinitely.
 This uses `-c NNN` to specify termination after `NNN` connections, with 0
 indicating no limit.
 
-    % wsbench -r 10 -c 0 ws://localhost:8080
+    % wsbench -r 10 ws://localhost:8080
+
+We can also send messages over each connection using the `-m NNN` option to
+indicate how many messages to send. The `-s NNN` option can be used to set the
+size of each message in bytes. When operating in this mode, the websocekt
+connection is guarnateed to remain open until all messages have been
+transmitted.
 
 `wsbench` also supports execution of arbitrary JavaScript code to drive the
 interaction over the open socket (e.g. to send and receive messages) using the
-`-s FILE` option. This allows testing of rich, application-specific behavior.
+`-S FILE` option. This allows testing of rich, application-specific behavior.
 
 The complete usage is
 
@@ -37,6 +44,8 @@ The complete usage is
     Available options:
       -c, --num-conns NUMBER   number of connections to open (default: 100)
       -h, --help               display this help
+      -m, --num-msgs NUMBER    number of messages per connection (dfeault: 0)
       -p, --protocol PROTO     set the Web Socket protocol to use (default: empty)
       -r, --rate NUMBER        number of connections per second (default: 0)
-      -s, --session FILE       file to use for session logic (default: None)
+      -s, --msg-size NUMBER    size of messages to send, in bytes (default: 32)
+      -S, --session FILE       file to use for session logic (default: None)

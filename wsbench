@@ -9,10 +9,34 @@ var OPTIONS = {
     connections : 10,
     rate : 0,
     session : function(ws) {
+        var ALPHABET = function() {
+            var a = '';
+            for (i = 0; i < 100; i++) {
+                a += String.fromCharCode(97 + Math.floor(Math.random() * 26));
+            }
+
+            return a;
+        }();
+
         return function() {
+            for (i = 0; i < OPTIONS.msgs; i++) {
+                var m = '';
+                var len = OPTIONS.msgSize;
+                var off = Math.floor(Math.random() * ALPHABET.length);
+                while (len > 0) {
+                    var l = Math.min(len, ALPHABET.length - off)
+                    m += ALPHABET.substr(off, l);
+                    len -= l;
+                }
+
+                ws.send(m);
+            }
+
             ws.close();
         }
-    }
+    },
+    msgs : 0,
+    msgSize : 32
 };
 
 var op = new OptionParser([
@@ -22,13 +46,19 @@ var op = new OptionParser([
     ['-h', '--help',
         'display this help'
     ],
+    ['-m', '--num-msgs NUMBER',
+        'number of messages per connection (dfeault: 0)'
+    ],
     ['-p', '--protocol PROTO',
         'set the Web Socket protocol to use (default: empty)'
     ],
     ['-r', '--rate NUMBER',
         'number of connections per second (default: 0)'
     ],
-    ['-s', '--session FILE',
+    ['-s', '--msg-size NUMBER',
+        'size of messages to send, in bytes (default: 32)'
+    ],
+    ['-S', '--session FILE',
         'file to use for session logic (default: None)'
     ]
 ]);
@@ -56,6 +86,12 @@ op.on('session', function(o, v) {
     }
 
     OPTIONS.session = require(v);
+});
+op.on('num-msgs', function(o, v) {
+    OPTIONS.msgs = v;
+});
+op.on('msg-size', function(o, v) {
+    OPTIONS.msgSize = v;
 });
 op.on(2, function(v) {
     OPTIONS.url = v;
