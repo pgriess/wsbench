@@ -49,7 +49,13 @@ op.on(2, function(v) {
 
 op.banner = 'usage: wsbench [options] <url>\n' +
 '\n' +
-'Kick off a benchmarking run against the given ws:// URL.';
+'Kick off a benchmarking run against the given ws:// URL.\n' +
+'\n' +
+'We can execute our workload in one of two ways: serially, wherein each\n' +
+'connection is closed before the next is initiated; or in parallel, wherein\n' +
+'a desired rate is specified and connections initiated to meet this rate,\n' +
+'independent of the state of other connections. Serial execution is the\n' +
+'default, and parallel execution can be specified using the -r <rate> option.';
 
 op.parse(process.argv);
 
