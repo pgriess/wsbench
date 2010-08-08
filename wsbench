@@ -36,11 +36,6 @@ op.on('protocol', function(o, v) {
     OPTIONS.protocol = v;
 });
 op.on('rate', function(o, v) {
-    if (v > 1000) {
-        console.error('wsbench: cannot handle more than 1000 reqs/s');
-        process.exit(1);
-    }
-
     OPTIONS.rate = v;
 });
 op.on(2, function(v) {
