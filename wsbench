@@ -18,7 +18,7 @@ var OPTIONS = {
             return a;
         }();
 
-        return function() {
+        ws.onopen = function() {
             for (i = 0; i < OPTIONS.msgs; i++) {
                 var m = '';
                 var len = OPTIONS.msgSize;
@@ -124,13 +124,15 @@ if (!OPTIONS.rate) {
     var createWS = function(src) {
         var ws = new WebSocket(src, OPTIONS.protocol);
 
-        ws.onopen = OPTIONS.session(ws);
+        OPTIONS.session(ws);
 
-        ws.onclose = function() {
-            if (++cnt < OPTIONS.connections) {
-                createWS(src);
-            }
-        };
+        if (!ws.onclose) {
+            ws.onclose = function() {
+                if (++cnt < OPTIONS.connections) {
+                    createWS(src);
+                }
+            };
+        }
     }
 
     createWS(OPTIONS.url);
@@ -148,7 +150,7 @@ if (!OPTIONS.rate) {
 
                 var ws = new WebSocket(OPTIONS.url, OPTIONS.protocol);
 
-                ws.onopen = OPTIONS.session(ws);
+                OPTIONS.session(ws);
             }, 1000);
         }, i * (1000 / OPTIONS.rate));
     }

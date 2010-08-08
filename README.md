@@ -34,11 +34,14 @@ for each web socket opened, so we keep our counter in the module scope.
     var cnt = 0;
     
     module.exports = function(ws) {
-        return function() {
+        ws.onopen = function() {
             ws.send((++cnt <= 10) ? 'Hello' : 'world!');
             ws.close();
         };
     };
+
+A more involved example is available in the `examples/echo/`
+[directory](http://github.com/pgriess/wsbench/tree/master/examples/echo/).
 
 The complete usage is
 
