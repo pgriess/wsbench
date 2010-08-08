@@ -4,17 +4,24 @@ var OptionParser = require('./lib/optparse').OptionParser;
 var sys = require('sys');
 var url = require('url');
 var WebSocket = require('./lib/websocket').WebSocket;
-var writeError = process.binding('stdio').writeError;
 
 var OPTIONS = {
-    connections : 100,
+    connections : 10,
+    rate : 0
 };
 
 var op = new OptionParser([
-    ['-c', '--num-conns NUMBER', 'number of connections to open (default: 100)'],
-    ['-h', '--help', 'display this help'],
+    ['-c', '--num-conns NUMBER',
+        'number of connections to open (default: 10)'
+    ],
+    ['-h', '--help',
+        'display this help'
+    ],
     ['-p', '--protocol PROTO',
         'set the Web Socket protocol to use (default: empty)'
+    ],
+    ['-r', '--rate NUMBER',
+        'number of connections per second (default: 0)'
     ]
 ]);
 
@@ -28,6 +35,14 @@ op.on('help', function() {
 op.on('protocol', function(o, v) {
     OPTIONS.protocol = v;
 });
+op.on('rate', function(o, v) {
+    if (v > 1000) {
+        console.error('wsbench: cannot handle more than 1000 reqs/s');
+        process.exit(1);
+    }
+
+    OPTIONS.rate = v;
+});
 op.on(2, function(v) {
     OPTIONS.url = v;
 });
@@ -39,27 +54,43 @@ op.banner = 'usage: wsbench [options] <url>\n' +
 op.parse(process.argv);
 
 if (!OPTIONS.url) {
-    writeError('wsbench: missing required <url> parameter\n');
+    console.error('wsbench: missing required <url> parameter');
     console.log('');
     console.log(op.toString());
     process.exit(1);
 }
 
-var cnt = 0;
-var createWS = function(src) {
-    var ws = new WebSocket(src, OPTIONS.protocol);
+if (!OPTIONS.rate) {
+    // We have no rate; synchronous
+    var cnt = 0;
+    var createWS = function(src) {
+        var ws = new WebSocket(src, OPTIONS.protocol);
 
-    ws.onopen = function() {
-        ws.close();
-    };
+        ws.onopen = function() {
+            ws.close();
+        };
 
-    ws.onclose = function() {
-        if (++cnt < OPTIONS.connections) {
-            createWS(src);
-        }
-    };
+        ws.onclose = function() {
+            if (++cnt < OPTIONS.connections) {
+                createWS(src);
+            }
+        };
+    }
+
+    createWS(OPTIONS.url);
+} else {
+    // We have a rate; parallel
+    for (i = 0; i < OPTIONS.rate; i++) {
+        setTimeout(function() {
+            setInterval(function() {
+                var ws = new WebSocket(OPTIONS.url, OPTIONS.protocol);
+
+                ws.onopen = function() {
+                    ws.close();
+                };
+            }, 1000);
+        }, i * (1000 / OPTIONS.rate));
+    }
 }
-
-createWS(OPTIONS.url);
 
 // vim: filetype=javascript
