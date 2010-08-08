@@ -19,13 +19,26 @@ indicating no limit.
 
 We can also send messages over each connection using the `-m NNN` option to
 indicate how many messages to send. The `-s NNN` option can be used to set the
-size of each message in bytes. When operating in this mode, the websocekt
+size of each message in bytes. When operating in this mode, the websocket
 connection is guarnateed to remain open until all messages have been
 transmitted.
 
 `wsbench` also supports execution of arbitrary JavaScript code to drive the
-interaction over the open socket (e.g. to send and receive messages) using the
-`-S FILE` option. This allows testing of rich, application-specific behavior.
+interaction over the open socket (e.g. to send and receive messages) using
+the `-S FILE` option. This allows testing of rich, application-specific
+behavior.  As a trivial example, the following file will send a `Hello`
+message for the first 10 connections and `world!` for each connection after
+and then close the connection. Note that the session function is invoked once
+for each web socket opened, so we keep our counter in the module scope.
+
+    var cnt = 0;
+    
+    module.exports = function(ws) {
+        return function() {
+            ws.send((++cnt <= 10) ? 'Hello' : 'world!');
+            ws.close();
+        };
+    };
 
 The complete usage is
 
