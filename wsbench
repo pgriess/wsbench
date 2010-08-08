@@ -7,7 +7,12 @@ var WebSocket = require('./lib/websocket').WebSocket;
 
 var OPTIONS = {
     connections : 10,
-    rate : 0
+    rate : 0,
+    session : function(ws) {
+        return function() {
+            ws.close();
+        }
+    }
 };
 
 var op = new OptionParser([
@@ -22,6 +27,9 @@ var op = new OptionParser([
     ],
     ['-r', '--rate NUMBER',
         'number of connections per second (default: 0)'
+    ],
+    ['-s', '--session FILE',
+        'file to use for session logic (default: None)'
     ]
 ]);
 
@@ -37,6 +45,17 @@ op.on('protocol', function(o, v) {
 });
 op.on('rate', function(o, v) {
     OPTIONS.rate = v;
+});
+op.on('session', function(o, v) {
+    if (v.length > 3 && v.substring(v.length - 3) === '.js') {
+        v = v.substring(0, v.length - 3);
+    }
+
+    if (v[0] !== '/') {
+        v = './' + v;
+    }
+
+    OPTIONS.session = require(v);
 });
 op.on(2, function(v) {
     OPTIONS.url = v;
@@ -69,9 +88,7 @@ if (!OPTIONS.rate) {
     var createWS = function(src) {
         var ws = new WebSocket(src, OPTIONS.protocol);
 
-        ws.onopen = function() {
-            ws.close();
-        };
+        ws.onopen = OPTIONS.session(ws);
 
         ws.onclose = function() {
             if (++cnt < OPTIONS.connections) {
@@ -95,9 +112,7 @@ if (!OPTIONS.rate) {
 
                 var ws = new WebSocket(OPTIONS.url, OPTIONS.protocol);
 
-                ws.onopen = function() {
-                    ws.close();
-                };
+                ws.onopen = OPTIONS.session(ws);
             }, 1000);
         }, i * (1000 / OPTIONS.rate));
     }
