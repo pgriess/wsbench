@@ -16,6 +16,10 @@ indicating no limit.
 
     % wsbench -r 10 -c 0 ws://localhost:8080
 
+`wsbench` also supports execution of arbitrary JavaScript code to drive the
+interaction over the open socket (e.g. to send and receive messages) using the
+`-s FILE` option. This allows testing of rich, application-specific behavior.
+
 The complete usage is
 
     usage: wsbench [options] <url>
@@ -36,4 +40,3 @@ The complete usage is
       -p, --protocol PROTO     set the Web Socket protocol to use (default: empty)
       -r, --rate NUMBER        number of connections per second (default: 0)
       -s, --session FILE       file to use for session logic (default: None)
-
