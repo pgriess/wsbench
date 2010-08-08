@@ -35,3 +35,5 @@ The complete usage is
       -h, --help               display this help
       -p, --protocol PROTO     set the Web Socket protocol to use (default: empty)
       -r, --rate NUMBER        number of connections per second (default: 0)
+      -s, --session FILE       file to use for session logic (default: None)
+
