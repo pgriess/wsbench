@@ -11,8 +11,10 @@ server running on localhost, port 8080.
 
 A parallel, rate-driven model is available using the `-r` option. For example,
 the following opens and closes 10 connections per second and runs indefinitely.
+This uses `-c NNN` to specify termination after `NNN` connections, with 0
+indicating no limit.
 
-    % wsbench -r 10 ws://localhost:8080
+    % wsbench -r 10 -c 0 ws://localhost:8080
 
 The complete usage is
 

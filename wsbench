@@ -83,10 +83,12 @@ if (!OPTIONS.rate) {
     createWS(OPTIONS.url);
 } else {
     // We have a rate; parallel
+    var cnt = 0;
     for (i = 0; i < OPTIONS.rate; i++) {
         setTimeout(function() {
             var iid = setInterval(function() {
-                if (OPTIONS.connections-- <= 0) {
+                if (OPTIONS.connections > 0 &&
+                    ++cnt >= OPTIONS.connections) {
                     clearInterval(iid);
                     return;
                 }
