@@ -4,6 +4,7 @@ var OptionParser = require('./lib/optparse').OptionParser;
 var sys = require('sys');
 var url = require('url');
 var WebSocket = require('./lib/websocket').WebSocket;
+var assert = require('assert');
 
 var OPTIONS = {
     connections : 10,
@@ -118,18 +119,23 @@ if (!OPTIONS.url) {
     process.exit(1);
 }
 
-var wsCnt = 0;
+var wsOpen = 0;
+var wsClose = 0;
 var wsErr = 0;
 
 var createWebSocket = function() {
     var ws = new WebSocket(OPTIONS.url, OPTIONS.protocol);
     OPTIONS.session(ws);
 
-    wsCnt++;
+    wsOpen++;
 
     ws.onerror = function(e) {
         wsErr++;
         ws.close();
+    };
+
+    ws.onclose = function() {
+        wsClose++;
     };
 
     return ws;
@@ -142,7 +148,7 @@ if (!OPTIONS.rate) {
 
         if (!ws.onclose) {
             ws.onclose = function() {
-                if (wsCnt < OPTIONS.connections) {
+                if (wsOpen < OPTIONS.connections) {
                     f();
                 }
             };
@@ -151,19 +157,49 @@ if (!OPTIONS.rate) {
 
     f();
 } else {
+    var tickInterval = (OPTIONS.rate > 1000) ? 1 : (1000 / OPTIONS.rate);
+    var connsPerTick = (OPTIONS.rate > 1000) ? (OPTIONS.rate / 1000) : 1;
+    var isUnlim = (OPTIONS.connections == 0);
+
+    assert.ok(tickInterval >= 1);
+    assert.ok(connsPerTick >= 1);
+
     // We have a rate; parallel
-    for (i = 0; i < OPTIONS.rate; i++) {
-        setTimeout(function() {
-            var iid = setInterval(function() {
-                if (OPTIONS.connections > 0 &&
-                    wsCnt >= OPTIONS.connections) {
-                    clearInterval(iid);
-                    return;
+    for (i = 0; i < 1000 / tickInterval; i++) {
+        setTimeout((function() {
+            var rem = 0;
+            var id = i;
+            var iid = undefined;
+
+            var f = function() {
+                for (rem += connsPerTick;
+                     rem >= 1 && (isUnlim || wsOpen < OPTIONS.connections);
+                     rem--) {
+                    createWebSocket();
                 }
 
-                createWebSocket();
-            }, 1000);
-        }, i * (1000 / OPTIONS.rate));
+                if (!isUnlim &&
+                    ((wsOpen + (OPTIONS.rate - connsPerTick)) > OPTIONS.connections)) {
+                    if (iid) {
+                        clearInterval(iid);
+                    }
+
+                    // If we're the last worker and we're shutting down, fire
+                    // off any remaining requests. We have to do this here
+                    // because we may have some fractions of a request
+                    // lingering in different worker's 'rem' values.
+                    if (id == (1000 / tickInterval) - 1) {
+                        while (wsOpen < OPTIONS.connections) {
+                            createWebSocket();
+                        }
+                    }
+                } else if (!iid) {
+                    iid = setInterval(f, 1000);
+                }
+            };
+
+            return f;
+        })(), i * tickInterval);
     }
 }
 
@@ -171,7 +207,9 @@ process.addListener('SIGINT', function() {
     process.exit(0);
 });
 process.addListener('exit', function() {
-    console.log('Success rate: ' + (Math.round(((1000 * (wsCnt - wsErr)) / wsCnt)) / 10) + '% from ' + wsCnt + ' connections');
+    console.log('Success rate: ' +
+        (Math.round(((1000 * (wsOpen - wsErr - (wsOpen - wsClose))) / wsOpen)) / 10) + '% ' +
+        'from ' + wsOpen + ' connections');
 });
 
 // vim: filetype=javascript
