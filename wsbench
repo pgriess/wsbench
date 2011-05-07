@@ -116,6 +116,14 @@ if (!OPTIONS.url) {
     console.error('wsbench: missing required <url> parameter');
     console.log('');
     console.log(op.toString());
+    process.stdout.flush();
+
+    /*
+    // XXX: This is lame. For some reason a single long string is getting
+    op.toString().split('\n').forEach(function(l) {
+        console.log(l);
+    });
+    */
     process.exit(1);
 }
 

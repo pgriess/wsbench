@@ -1,7 +1,9 @@
 `wsbench` is a scriptable benchmarking tool for Web Socket servers.
 
 An installation of [NodeJS](http://nodejs.org) is required, but there are no
-other external dependencies.
+other external dependencies. See [Benchmarking Web Socket servers with
+wsbench](http://blog.std.in/2010/09/24/benchmarking-web-socket-servers/) for
+more background on the motivation and intended usage of this tool.
 
 ## Basic usage
 
