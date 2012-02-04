@@ -1,10 +1,14 @@
 #!/bin/env node
 
 var OptionParser = require('./lib/optparse').OptionParser;
-var sys = require('sys');
 var url = require('url');
 var WebSocket = require('./lib/websocket').WebSocket;
 var assert = require('assert');
+
+// Allows the util/sys module to be backward compatible due to its name change
+var reg = /^v0.([0-9]+)/i.exec(process.version);
+var oldVersion = reg ? +reg[1] <= 4 : false;
+var sys = oldVersion ? require('sys') : require('util');
 
 var OPTIONS = {
     connections : 10,
